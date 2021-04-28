@@ -27,6 +27,7 @@ dependencies:
 - http-types
 - text
 - unordered-containers
+- http-conduit
 
 default-extensions: OverloadedStrings
 
