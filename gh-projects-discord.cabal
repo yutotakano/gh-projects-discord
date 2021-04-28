@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 728a638c1843efe4e08c392bf29fdffa9fd9134508bf807ffe740c41c58d114b
+-- hash: 406f476dfc62a6953338720247ce32a360e66999fd5dc7e518a8520a7d45e041
 
 name:           gh-projects-discord
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      DiscordSender
       GitHubWebhookDecoder
       Lib
   other-modules:
@@ -38,6 +39,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , http-conduit
     , http-types
     , scotty
     , text
@@ -57,6 +59,7 @@ executable gh-projects-discord-exe
     , base >=4.7 && <5
     , bytestring
     , gh-projects-discord
+    , http-conduit
     , http-types
     , scotty
     , text
@@ -77,6 +80,7 @@ test-suite gh-projects-discord-test
     , base >=4.7 && <5
     , bytestring
     , gh-projects-discord
+    , http-conduit
     , http-types
     , scotty
     , text
