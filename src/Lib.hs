@@ -21,24 +21,29 @@ import           Web.Scotty
 main :: IO ()
 main = scotty 3000 $
     post "/github" $ do
-        parsed <- decodeBody
+        webhook <- decodeWebhook
         liftIO $ putStrLn $ "Received webhook."
-        liftIO $ print parsed
+        liftIO $ print webhook
         html $ "Hello"
 
--- | Decode the JSON in the request body.
--- Throws 400 if the body is empty or unparsable.
-decodeBody :: ActionM Webhook
-decodeBody = do
-    body <- body
-    decoded <- case eitherDecode body of
-        Left x  -> badReq (TL.pack x)
-        Right x -> pure x
-    let webhook = parseEither parseWebhook decoded
-    case webhook of
-        Left x  -> badReq (TL.pack x)
-        Right x -> pure x
+-- | ADT for the Webhook as a whole.
+data Webhook = Webhook Context Action Item deriving Show
 
+-- | ADT for the value inside the webhook.
+data Item = Project Value
+          | ProjectCard Value
+          | ProjectColumn Value
+          deriving Show
+
+-- | ADT for the context in which the action was performed in.
+data Context = Context  { senderName    :: String
+                        , senderImage   :: String
+                        , repoName      :: String
+                        , repoOwnerName :: String
+                        }
+                        deriving Show
+
+-- | ADT for the action verb that was performed on an item.
 data Action = Created
             | Edited
             | Moved
@@ -48,30 +53,41 @@ data Action = Created
             | Deleted
             deriving Show
 
-data Webhook = Project Action Value
-             | ProjectCard Action Value
-             | ProjectColumn Action Value
-             deriving Show
+-- | Decode the JSON in the request body to a Webhook.
+-- Throws 400 if the body is empty or unparsable.
+decodeWebhook :: ActionM Webhook
+decodeWebhook = do
+    body <- body
+    decoded <- case eitherDecode body of
+        Left x  -> badReq (TL.pack x)
+        Right x -> pure x
 
-data Context = Context  { senderName    :: String
-                        , senderImage   :: String
-                        , repoName      :: String
-                        , repoOwnerName :: String
-                        }
+    let webhook = parseEither parseWebhook decoded
+    case webhook of
+        Left x  -> badReq (TL.pack x)
+        Right x -> pure x
 
+-- | Parses a decoded JSON Value to a Webhook.
 parseWebhook :: Value -> Parser Webhook
 parseWebhook v = do
-    action <- parseAction v
     context <- parseContext v
-    parseItem action v
+    action <- parseAction v
+    item <- parseItem v
+    pure $ Webhook context action item
 
-parseItem :: Action -> Value -> Parser Webhook
-parseItem action = withObject "entire webhook" $ \o ->
-    asum [ ProjectCard action <$> (o .: "project_card")
-         , ProjectColumn action <$> (o .: "project_column")
-         , Project action <$> (o .: "project")
-         ]
+-- | Parses a decoded JSON Value to a Context.
+parseContext :: Value -> Parser Context
+parseContext = withObject "entire webhook" $ \o -> do
+    sender <- o .: "sender"
+    senderName <- sender .: "login"
+    senderImage <- sender .: "avatar_url"
+    repository <- o .: "repository"
+    repoName <- repository .: "name"
+    repoOwner <- repository .: "owner"
+    repoOwnerName <- repoOwner .: "login"
+    pure $ Context senderName senderImage repoName repoOwnerName
 
+-- | Parses a decoded JSON Value to an Action.
 parseAction :: Value -> Parser Action
 parseAction = withObject "entire webhook" $ \o -> do
     action <- o .: "action" :: Parser String
@@ -84,18 +100,16 @@ parseAction = withObject "entire webhook" $ \o -> do
         "reopened"  -> pure Reopened
         "deleted"   -> pure Deleted
         _           -> fail "Action not supported."
- 
-parseContext :: Value -> Parser Context
-parseContext = withObject "entire webhook" $ \o -> do
-    sender <- o .: "sender"
-    senderName <- sender .: "login"
-    senderImage <- sender .: "avatar_url"
-    repository <- o .: "repository"
-    repoName <- repository .: "name"
-    repoOwner <- repository .: "owner"
-    repoOwnerName <- repoOwner .: "login"
-    pure $ Context senderName senderImage repoName repoOwnerName
 
+-- | Parses a decoded JSON Value to an Item.
+parseItem :: Value -> Parser Item
+parseItem = withObject "entire webhook" $ \o ->
+    asum [ ProjectCard <$> (o .: "project_card")
+         , ProjectColumn <$> (o .: "project_column")
+         , Project <$> (o .: "project")
+         ]
+
+-- | End request with a 400.
 badReq :: TL.Text -> ActionM a
 badReq t = do
     status Status.badRequest400
