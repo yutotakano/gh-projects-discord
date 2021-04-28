@@ -1,12 +1,18 @@
 module GitHubWebhookDecoder
     ( Webhook(..)
+    , Item(..)
+    , Context(..)
+    , Action(..)
     , parseWebhook
+    , parseBoardName
+    , parseBoardUrl
     ) where
 
 import           Data.Aeson
 import           Data.Aeson.Types
 import           Data.Foldable          ( asum )
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as T
 
 -- | ADT for the Webhook as a whole.
 data Webhook = Webhook Context Action Item deriving Show
@@ -18,10 +24,10 @@ data Item = Project Value
           deriving Show
 
 -- | ADT for the context in which the action was performed in.
-data Context = Context  { senderName    :: String
-                        , senderImage   :: String
-                        , repoName      :: String
-                        , repoOwnerName :: String
+data Context = Context  { senderName    :: T.Text
+                        , senderImage   :: T.Text
+                        , repoName      :: T.Text
+                        , repoOwnerName :: T.Text
                         }
                         deriving Show
 
@@ -78,3 +84,10 @@ parseItem = withObject "entire webhook" $ \o ->
          , Project <$> (o .: "project")
          ]
 
+-- | Parses a Project to its name.
+parseBoardName :: Value -> Parser T.Text
+parseBoardName = withObject "project board" $ \o -> o .: "name"
+
+-- | Parses a Project to its URL.
+parseBoardUrl :: Value -> Parser T.Text
+parseBoardUrl = withObject "project board" $ \o -> o .: "html_url"
