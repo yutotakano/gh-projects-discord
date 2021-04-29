@@ -58,90 +58,54 @@ badReq t = do
     finish
 
 createEmbed :: Token -> Webhook -> IO Embed
-createEmbed t (Webhook c a (Project v))       = createProjectEmbed t c a v
-createEmbed t (Webhook c a (ProjectColumn v)) = createProjectColumnEmbed t c a v
-createEmbed t (Webhook c a (ProjectCard v))   = createProjectCardEmbed t c a v
+createEmbed t (Webhook c a (Project v)) = do
+    let boardName = parseMaybeDef parseBoardName "Untitled Board" v
+    let boardUrl = parseMaybeDef parseBoardUrl "" v
+    let boardBody = parseMaybeDef parseBoardBody "(empty)" v
+    let title = titlePrefix c <> "Project Board " <> (T.pack $ show a) <> ": " <> boardName
+    let description = "Note: `" <> boardBody <> "`"
+    pure $ (def c a)
+        { embedTitle = title
+        , embedDescription = description
+        , embedUrl = boardUrl
+        }
 
-createProjectEmbed :: Token -> Context -> Action -> Value -> IO Embed
-createProjectEmbed t c a v = do
-    let projectBoardName = parseMaybeDef parseBoardName "" v
-    let projectBoardUrl = parseMaybeDef parseBoardUrl "" v
-    let projectBoardBody = parseMaybeDef parseBoardBody "" v
-   
-    let title = titlePrefix c <> "Project Board " <> (T.pack $ show a) <> ": " <> projectBoardName
-    let description = "Description: `" <> projectBoardBody <> "`"
-    pure $
-        Embed { embedTitle = title
-              , embedType = "rich"
-              , embedDescription = ""
-              , embedUrl = projectBoardUrl
-              , embedColor = colorFromAction a
-              , embedAuthor = createAuthor c
-              }
+createEmbed t (Webhook c a (ProjectColumn v)) = do
+    let columnName = parseMaybeDef parseColumnName "" v
+    (boardName, boardUrl) <- getBoard t v
+    let title = titlePrefix c <> "Project Column " <> (T.pack $ show a) <> ": " <> boardName
+    let description = "Column " <> (T.pack $ show a) <> ": `" <> columnName <> "`"
+    pure $ (def c a)
+        { embedTitle = title
+        , embedDescription = description
+        , embedUrl = boardUrl
+        }
 
-createProjectColumnEmbed :: Token -> Context -> Action -> Value -> IO Embed
-createProjectColumnEmbed t c a v = do
-    let projectColumnName = parseMaybeDef parseColumnName "" v
-    -- The webhook event does not send the containing Project nor its ID,
-    -- so manually request it.
-    let projectUrl = parseMaybeDef parseColumnProjectUrl "" v
-    projectBoard <- requestFurther t projectUrl
-
-    let projectBoardName = parseMaybeDef parseBoardName "" projectBoard
-    let projectBoardUrl = parseMaybeDef parseBoardUrl "" projectBoard
-    
-    let title = titlePrefix c <> "Project Column " <> (T.pack $ show a) <> ": " <> projectBoardName
-    let description = "Column: `" <> projectColumnName <> "`"
-    pure $
-        Embed { embedTitle = title
-              , embedType = "rich"
-              , embedDescription = description
-              , embedUrl = projectBoardUrl
-              , embedColor = colorFromAction a
-              , embedAuthor = createAuthor c
-              }
-
-createProjectCardEmbed :: Token -> Context -> Action -> Value -> IO Embed
-createProjectCardEmbed t c Moved v = do
+createEmbed t (Webhook c Moved (ProjectCard v)) = do
     -- Handle move event differently
-    let cardNote = parseMaybeDef parseCardNote "" v
-    let columnUrl = parseMaybeDef parseCardColumnUrl "" v
-    column <- requestFurther t columnUrl
+    let cardNote = parseMaybeDef parseCardNote "(empty)" v
+    let columnApiUrl = parseMaybeDef parseCardColumnUrl "" v
+    column <- requestFurther t columnApiUrl
     let columnName = parseMaybeDef parseColumnName "" column
-    
-    let projectUrl = parseMaybeDef parseCardProjectUrl "" v
-    projectBoard <- requestFurther t projectUrl
-    let projectBoardName = parseMaybeDef parseBoardName "" projectBoard
-    let projectBoardUrl = parseMaybeDef parseBoardUrl "" projectBoard
+    (boardName, boardUrl) <- getBoard t v
+    let title = titlePrefix c <> "Project Card Moved: " <> boardName
+    let description = "Moved card `" <> cardNote <> "` to `" <> columnName <> "`"
+    pure $ (def c Moved)
+        { embedTitle = title
+        , embedDescription = description
+        , embedUrl = boardUrl
+        }
 
-    let title = titlePrefix c <> "Project Card Moved: " <> projectBoardName
-    let description = "Moved `" <> cardNote <> "` to `" <> columnName <> "`"
-    pure $
-        Embed { embedTitle = title
-              , embedType = "rich"
-              , embedDescription = description
-              , embedUrl = projectBoardUrl
-              , embedColor = colorFromAction Moved
-              , embedAuthor = createAuthor c
-              }
-
-createProjectCardEmbed t c a v = do
-    let cardNote = parseMaybeDef parseCardNote "" v
-    let projectUrl = parseMaybeDef parseCardProjectUrl "" v
-    projectBoard <- requestFurther t projectUrl
-    let projectBoardName = parseMaybeDef parseBoardName "" projectBoard
-    let projectBoardUrl = parseMaybeDef parseBoardUrl "" projectBoard
-
-    let title = titlePrefix c <> "Project Card " <> (T.pack $ show a) <> ": " <> projectBoardName
-    let description = "Card: `" <> cardNote <> "`"
-    pure $ 
-        Embed { embedTitle = title
-              , embedType = "rich"
-              , embedDescription = description
-              , embedUrl = projectBoardUrl
-              , embedColor = colorFromAction a
-              , embedAuthor = createAuthor c
-              }
+createEmbed t (Webhook c a (ProjectCard v)) = do
+    let cardNote = parseMaybeDef parseCardNote "(empty)" v
+    (boardName, boardUrl) <- getBoard t v
+    let title = titlePrefix c <> "Project Card " <> (T.pack $ show a) <> ": " <> boardName
+    let description = "Card " <> (T.pack $ show a) <> ": `" <> cardNote <> "`"
+    pure $ (def c a)
+        { embedTitle = title
+        , embedDescription = description
+        , embedUrl = boardUrl
+        }
 
 titlePrefix :: Context -> T.Text
 titlePrefix c = "[" <> repoOwnerName c <> "/" <> repoName c <> "] "
@@ -151,6 +115,24 @@ parseMaybeDef parser def v  =
     case parseMaybe parser v of
         Nothing -> def
         Just x  -> x
+
+getBoard :: Token -> Value -> IO (T.Text, T.Text)
+getBoard token v = do
+    let projectApiUrl = parseMaybeDef parseProjectUrl "" v
+    projectBoard <- requestFurther token projectApiUrl
+    let projectBoardName = parseMaybeDef parseBoardName "Untitled Board" projectBoard
+    let projectBoardUrl = parseMaybeDef parseBoardUrl "" projectBoard
+
+    pure (projectBoardName, projectBoardUrl)
+
+def :: Context -> Action -> Embed
+def c a = Embed { embedTitle = ""
+                , embedUrl = ""
+                , embedDescription = ""
+                , embedType = "rich"
+                , embedColor = colorFromAction a
+                , embedAuthor = createAuthor c
+                }
 
 colorFromAction :: Action -> Integer
 colorFromAction Created = 6667344 -- #65bc50
