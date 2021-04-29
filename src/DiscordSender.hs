@@ -3,6 +3,7 @@
 module DiscordSender
     ( sendEmbed
     , Embed(..)
+    , EmbedAuthor(..)
     ) where
 
 
@@ -10,6 +11,7 @@ import           Data.Aeson
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 import           Network.HTTP.Conduit
+import           Network.HTTP.Types.Status
 
 -- | ADT for the Discord Webhook Execute request body.
 data Params = Params { content  :: T.Text
@@ -34,6 +36,7 @@ data Embed = Embed { embedTitle :: T.Text
                    , embedDescription :: T.Text
                    , embedUrl :: T.Text
                    , embedColor :: Integer
+                   , embedAuthor :: EmbedAuthor
                    } 
 
 instance ToJSON Embed where
@@ -43,20 +46,34 @@ instance ToJSON Embed where
         , "description" .= embedDescription
         , "url" .= embedUrl
         , "color" .= embedColor
+        , "author" .= embedAuthor
+        ]
+
+data EmbedAuthor = EmbedAuthor { embedAuthorName :: T.Text
+                               , embedAuthorUrl :: T.Text
+                               , embedAuthorIcon :: T.Text
+                               }
+
+instance ToJSON EmbedAuthor where
+    toJSON EmbedAuthor{..} = object
+        [ "name" .= embedAuthorName
+        , "url" .= embedAuthorUrl
+        , "icon_url" .= embedAuthorIcon
         ]
 
 
 sendRequest :: String -> Params -> IO ()
 sendRequest endpoint params = do
     initRequest <- parseRequest endpoint
-    LBS.putStr $ encode params
     let request = initRequest { method = "POST"
                               , requestBody = RequestBodyLBS $ encode params
                               , requestHeaders = [("Content-Type", "application/json")]
                               }
     manager <- newManager tlsManagerSettings
     res <- httpLbs request manager
-    print res 
+    case () of
+        _ | responseStatus res == status204 -> pure ()
+        _                                   -> LBS.putStr $ responseBody res
 
 sendEmbed :: String -> Embed -> IO ()
 sendEmbed endpoint embed = do

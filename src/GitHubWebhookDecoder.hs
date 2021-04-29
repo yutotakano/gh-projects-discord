@@ -6,6 +6,12 @@ module GitHubWebhookDecoder
     , parseWebhook
     , parseBoardName
     , parseBoardUrl
+    , parseBoardBody
+    , parseColumnName
+    , parseColumnProjectUrl
+    , parseCardNote
+    , parseCardColumnUrl
+    , parseCardProjectUrl
     ) where
 
 import           Data.Aeson
@@ -35,7 +41,6 @@ data Context = Context  { senderName    :: T.Text
 data Action = Created
             | Edited
             | Moved
-            | Converted
             | Closed
             | Reopened
             | Deleted
@@ -70,7 +75,6 @@ parseAction = withObject "entire webhook" $ \o -> do
         "created"   -> pure Created
         "edited"    -> pure Edited
         "moved"     -> pure Moved
-        "converted" -> pure Converted
         "closed"    -> pure Closed
         "reopened"  -> pure Reopened
         "deleted"   -> pure Deleted
@@ -91,3 +95,22 @@ parseBoardName = withObject "project board" $ \o -> o .: "name"
 -- | Parses a Project to its URL.
 parseBoardUrl :: Value -> Parser T.Text
 parseBoardUrl = withObject "project board" $ \o -> o .: "html_url"
+
+parseBoardBody :: Value -> Parser T.Text
+parseBoardBody = withObject "project board" $ \o -> o .: "body"
+
+parseColumnName :: Value -> Parser T.Text
+parseColumnName = withObject "project board column" $ \o -> o .: "name"
+
+parseColumnProjectUrl :: Value -> Parser T.Text
+parseColumnProjectUrl = withObject "project board column" $ \o -> o .: "project_url"
+
+parseCardNote :: Value -> Parser T.Text
+parseCardNote = withObject "project board card" $ \o -> o .: "note"
+
+parseCardColumnUrl :: Value -> Parser T.Text
+parseCardColumnUrl = withObject "project board card" $ \o -> o .: "column_url"
+
+parseCardProjectUrl :: Value -> Parser T.Text
+parseCardProjectUrl = withObject "project board card" $ \o -> o .: "project_url"
+

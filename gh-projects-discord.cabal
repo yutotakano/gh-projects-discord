@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 406f476dfc62a6953338720247ce32a360e66999fd5dc7e518a8520a7d45e041
+-- hash: 5bf00fc10423e807dd168af53db31534fab39184672091df94a99a829f24bb9b
 
 name:           gh-projects-discord
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       DiscordSender
+      GitHubFurtherRequester
       GitHubWebhookDecoder
       Lib
   other-modules:
