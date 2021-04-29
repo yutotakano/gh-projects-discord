@@ -23,4 +23,4 @@ I decided it would help a lot if I build a relayer myself, basically acting as a
 
 ## License
 
-[MIT](./ChangeLog.md)
+[MIT](./LICENSE.md)
