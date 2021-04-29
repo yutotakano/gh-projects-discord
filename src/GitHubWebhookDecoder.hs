@@ -95,18 +95,23 @@ parseBoardName = withObject "project board" $ \o -> o .: "name"
 parseBoardUrl :: Value -> Parser T.Text
 parseBoardUrl = withObject "project board" $ \o -> o .: "html_url"
 
+-- | Parses a Project to its body text.
 parseBoardBody :: Value -> Parser T.Text
 parseBoardBody = withObject "project board" $ \o -> o .: "body"
 
+-- | Parses a Column to its name.
 parseColumnName :: Value -> Parser T.Text
 parseColumnName = withObject "project board column" $ \o -> o .: "name"
 
+-- | Parses a Card to its contents.
 parseCardNote :: Value -> Parser T.Text
 parseCardNote = withObject "project board card" $ \o -> o .: "note"
 
+-- | Parses a Card to its column API URL.
 parseCardColumnUrl :: Value -> Parser T.Text
 parseCardColumnUrl = withObject "project board card" $ \o -> o .: "column_url"
 
+-- | Parses a Column or a Card to its project API URL.
 parseProjectUrl :: Value -> Parser T.Text
 parseProjectUrl = withObject "project board column or card" $ \o -> o .: "project_url"
 

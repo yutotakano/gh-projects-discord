@@ -57,6 +57,8 @@ badReq t = do
     text t
     finish
 
+-- | Create an Embed in the IO Monad, using the GH token
+-- and the Webhook data.
 createEmbed :: Token -> Webhook -> IO Embed
 createEmbed t (Webhook c a (Project v)) = do
     let boardName = parseMaybeDef parseBoardName "Untitled Board" v
@@ -107,15 +109,18 @@ createEmbed t (Webhook c a (ProjectCard v)) = do
         , embedUrl = boardUrl
         }
 
+-- | Create a "[repo/user]" prefix for all embed titles.
 titlePrefix :: Context -> T.Text
 titlePrefix c = "[" <> repoOwnerName c <> "/" <> repoName c <> "] "
 
+-- | Run a parser with a default value if it fails.
 parseMaybeDef :: (a -> Parser b) -> b -> a -> b
 parseMaybeDef parser def v  =
     case parseMaybe parser v of
         Nothing -> def
         Just x  -> x
 
+-- | Request GH for a board object through the preview GitHub Project API.
 getBoard :: Token -> Value -> IO (T.Text, T.Text)
 getBoard token v = do
     let projectApiUrl = parseMaybeDef parseProjectUrl "" v
@@ -125,6 +130,7 @@ getBoard token v = do
 
     pure (projectBoardName, projectBoardUrl)
 
+-- | Default ADT for Embed.
 def :: Context -> Action -> Embed
 def c a = Embed { embedTitle = ""
                 , embedUrl = ""
@@ -134,6 +140,7 @@ def c a = Embed { embedTitle = ""
                 , embedAuthor = createAuthor c
                 }
 
+-- | Transform Actions to decimal color codes.
 colorFromAction :: Action -> Integer
 colorFromAction Created = 6667344 -- #65bc50
 colorFromAction Edited = 16766784 -- #ffd740
@@ -142,6 +149,7 @@ colorFromAction Closed = 0
 colorFromAction Reopened = 11771355 -- #b39ddb
 colorFromAction Deleted = 6588634 -- #6488da
 
+-- | Transform Context to an EmbedAuthor for Embeds.
 createAuthor :: Context -> EmbedAuthor
 createAuthor context = EmbedAuthor { embedAuthorName = senderName context
                                    , embedAuthorUrl = "https://github.com/" <> senderName context

@@ -49,6 +49,7 @@ instance ToJSON Embed where
         , "author" .= embedAuthor
         ]
 
+-- | ADT for the Discord Embed Author type.
 data EmbedAuthor = EmbedAuthor { embedAuthorName :: T.Text
                                , embedAuthorUrl :: T.Text
                                , embedAuthorIcon :: T.Text
@@ -61,7 +62,7 @@ instance ToJSON EmbedAuthor where
         , "icon_url" .= embedAuthorIcon
         ]
 
-
+-- | Send a POST request to a webhook endpoint, with the Discord params.
 sendRequest :: String -> Params -> IO ()
 sendRequest endpoint params = do
     initRequest <- parseRequest endpoint
@@ -75,6 +76,7 @@ sendRequest endpoint params = do
         _ | responseStatus res == status204 -> pure ()
         _                                   -> LBS.putStr $ responseBody res
 
+-- | Wrapper for sendRequest, specifically for sending embeds.
 sendEmbed :: String -> Embed -> IO ()
 sendEmbed endpoint embed = do
     let params = Params { content = ""

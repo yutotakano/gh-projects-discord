@@ -12,6 +12,8 @@ import           Network.HTTP.Types.Status
 
 type Token = T.Text
 
+-- | Perform a GET request to the specified GitHub API url, using the
+-- token of format "user:token". Returns a decoded Aeson Value.
 requestFurther :: Token -> T.Text -> IO Value
 requestFurther token url = do
     let [user, password] = T.splitOn ":" token
