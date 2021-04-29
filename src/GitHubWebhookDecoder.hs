@@ -10,7 +10,10 @@ module GitHubWebhookDecoder
     , parseColumnName
     , parseCardNote
     , parseCardColumnUrl
+    , parseCardIssueUrl
     , parseProjectUrl
+    , parseIssueTitle
+    , parseIssueUrl
     ) where
 
 import           Data.Aeson
@@ -111,7 +114,18 @@ parseCardNote = withObject "project board card" $ \o -> o .: "note"
 parseCardColumnUrl :: Value -> Parser T.Text
 parseCardColumnUrl = withObject "project board card" $ \o -> o .: "column_url"
 
+-- | Parses a Card to its issue API Url.
+parseCardIssueUrl :: Value -> Parser T.Text
+parseCardIssueUrl = withObject "project board card" $ \o -> o .: "content_url"
+
 -- | Parses a Column or a Card to its project API URL.
 parseProjectUrl :: Value -> Parser T.Text
 parseProjectUrl = withObject "project board column or card" $ \o -> o .: "project_url"
 
+-- | Parses an Issue to its title.
+parseIssueTitle :: Value -> Parser T.Text
+parseIssueTitle = withObject "issue" $ \o -> o .: "title"
+
+-- | Parses an Issue to its URL.
+parseIssueUrl :: Value -> Parser T.Text
+parseIssueUrl = withObject "issue" $ \o -> o .: "html_url"
