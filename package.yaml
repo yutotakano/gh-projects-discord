@@ -1,7 +1,7 @@
 name:                gh-projects-discord
 version:             0.1.0.0
 github:              "yutotakano/gh-projects-discord"
-license:             BSD3
+license:             MIT
 author:              "Yuto Takano"
 maintainer:          "moa17stock@gmail.com"
 copyright:           "2021 Yuto Takano"
