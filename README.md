@@ -14,6 +14,8 @@ I decided it would help a lot if I build a relayer myself, basically acting as a
 2. The service parses and optionally fetches more information relating to the Project board.
 3. The service pushes a webhook event to Discord using the webhook URL passed in as the cli argument.
 
+![Demo Image](https://i.imgur.com/OfVpXv1.png)
+
 ## Run
 
 1. Create a `gh.token` file containing `<github-username>:<access token>`
