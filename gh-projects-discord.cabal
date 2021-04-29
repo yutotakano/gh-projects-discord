@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5bf00fc10423e807dd168af53db31534fab39184672091df94a99a829f24bb9b
+-- hash: 625ab5e5f0422711a0d211d8c7da8ae215fa469e50eaa65e16cd39867027a37a
 
 name:           gh-projects-discord
 version:        0.1.0.0
@@ -14,7 +14,7 @@ bug-reports:    https://github.com/yutotakano/gh-projects-discord/issues
 author:         Yuto Takano
 maintainer:     moa17stock@gmail.com
 copyright:      2021 Yuto Takano
-license:        BSD3
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:

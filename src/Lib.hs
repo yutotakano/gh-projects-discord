@@ -16,9 +16,9 @@ import qualified Network.HTTP.Types.Status as Status
 import           System.Environment
 import           Web.Scotty
 
+import           DiscordSender
 import           GitHubWebhookDecoder
 import           GitHubFurtherRequester
-import           DiscordSender
 
 -- | Entry point.
 main :: IO ()
@@ -37,23 +37,23 @@ main = do
             html $ "Success."
 
 -- | Decode the JSON in the request body to a Webhook.
--- Throws 400 if the body is empty or unparsable.
+-- Silently fails if the body is empty or unparsable.
 decodeWebhook :: ActionM Webhook
 decodeWebhook = do
     body <- body
     decoded <- case eitherDecode body of
-        Left x  -> badReq (TL.pack x)
+        Left x  -> silentFail (TL.pack x)
         Right x -> pure x
 
     let webhook = parseEither parseWebhook decoded
     case webhook of
-        Left x  -> badReq (TL.pack x)
+        Left x  -> silentFail (TL.pack x)
         Right x -> pure x
 
--- | End request with a 400.
-badReq :: TL.Text -> ActionM a
-badReq t = do
-    status Status.badRequest400
+-- | End request with a 202. Used to show success, but nothing acted.
+silentFail :: TL.Text -> ActionM a
+silentFail t = do
+    status Status.status202
     text t
     finish
 
