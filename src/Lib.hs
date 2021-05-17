@@ -65,7 +65,7 @@ createEmbed t (Webhook c a (Project v)) = do
     let boardUrl = parseMaybeDef parseBoardUrl "" v
     let boardBody = parseMaybeDef parseBoardBody "(empty)" v
     let title = titlePrefix c <> "Project Board " <> (T.pack $ show a) <> ": " <> boardName
-    let description = "Note: `" <> boardBody <> "`"
+    let description = "Note: " <> boardBody <> ""
     pure $ (def c a)
         { embedTitle = title
         , embedDescription = description
@@ -76,7 +76,7 @@ createEmbed t (Webhook c a (ProjectColumn v)) = do
     let columnName = parseMaybeDef parseColumnName "" v
     (boardName, boardUrl) <- getBoard t v
     let title = titlePrefix c <> "Project Column " <> (T.pack $ show a) <> ": " <> boardName
-    let description = "Column " <> (T.pack $ show a) <> ": `" <> columnName <> "`"
+    let description = "Column " <> (T.pack $ show a) <> ": **" <> columnName <> "**"
     pure $ (def c a)
         { embedTitle = title
         , embedDescription = description
@@ -92,7 +92,7 @@ createEmbed t (Webhook c Moved (ProjectCard v)) = do
     let columnName = parseMaybeDef parseColumnName "" column
     (boardName, boardUrl) <- getBoard t v
     let title = titlePrefix c <> "Project Card Moved: " <> boardName
-    let description = "Moved card " <> cardNote <> " to `" <> columnName <> "`"
+    let description = "Moved card " <> cardNote <> ".\n\nNew Column: **" <> columnName <> "**"
     pure $ (def c Moved)
         { embedTitle = title
         , embedDescription = description
@@ -135,7 +135,7 @@ getBoard token v = do
 -- and get the title and link.
 getCardNote :: Token -> Value -> IO T.Text
 getCardNote t v = case parseMaybe parseCardNote v of
-    Just x  -> pure $ "`" <> x <> "`"
+    Just x  -> pure $ "**" <> x <> "**"
     Nothing -> do
         -- Attempt to grab the relevant issue
         let mbIssueApiUrl = parseMaybe parseCardIssueUrl v
@@ -145,7 +145,7 @@ getCardNote t v = case parseMaybe parseCardNote v of
                 issue <- requestFurther t issueApiUrl
                 let issueTitle = parseMaybeDef parseIssueTitle "" issue
                 let issueUrl = parseMaybeDef parseIssueUrl "" issue
-                pure $ "[`" <> issueTitle <> "`](" <> issueUrl <> ")"
+                pure $ "[**" <> issueTitle <> "**](" <> issueUrl <> ")"
 
 -- | Default ADT for Embed.
 def :: Context -> Action -> Embed
