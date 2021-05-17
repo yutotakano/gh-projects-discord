@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 625ab5e5f0422711a0d211d8c7da8ae215fa469e50eaa65e16cd39867027a37a
+-- hash: 3f9e7fd215b03527c09c616546aa6d3272bf0af417a27840ed70d9ff770d9fa8
 
 name:           gh-projects-discord
-version:        0.1.0.0
+version:        0.2.0
 description:    Relay GitHub Project webhooks to Discord
 homepage:       https://github.com/yutotakano/gh-projects-discord#readme
 bug-reports:    https://github.com/yutotakano/gh-projects-discord/issues
