@@ -11,7 +11,7 @@ I decided it would help a lot if I build a relayer myself, basically acting as a
 ## Flow
 
 1. GitHub pushes a webhook event to the server running `gh-projects-discord-exe` (port 3000).
-2. The service parses and optionally fetches more information relating to the Project board.
+2. The service parses and optionally fetches more information relating to the Project board. It even correctly fetches linked Issue titles and links!
 3. The service pushes a webhook event to Discord using the webhook URL passed in as the cli argument.
 
 ![Demo Image](https://i.imgur.com/OfVpXv1.png)
