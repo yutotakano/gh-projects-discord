@@ -26,27 +26,30 @@ import qualified Data.Text as T
 data Webhook = Webhook Context Action Item deriving Show
 
 -- | ADT for the value inside the webhook.
-data Item = Project Value
-          | ProjectCard Value
-          | ProjectColumn Value
-          deriving Show
+data Item
+    = Project Value
+    | ProjectCard Value
+    | ProjectColumn Value
+    deriving Show
 
 -- | ADT for the context in which the action was performed in.
-data Context = Context  { senderName    :: T.Text
-                        , senderImage   :: T.Text
-                        , repoName      :: T.Text
-                        , repoOwnerName :: T.Text
-                        }
-                        deriving Show
+data Context = Context
+    { senderName    :: T.Text
+    , senderImage   :: T.Text
+    , repoName      :: T.Text
+    , repoOwnerName :: T.Text
+    }
+    deriving Show
 
 -- | ADT for the action verb that was performed on an item.
-data Action = Created
-            | Edited
-            | Moved
-            | Closed
-            | Reopened
-            | Deleted
-            deriving Show
+data Action
+    = Created
+    | Edited
+    | Moved
+    | Closed
+    | Reopened
+    | Deleted
+    deriving Show
 
 
 -- | Parses a decoded JSON Value to a Webhook.
@@ -74,13 +77,13 @@ parseAction :: Value -> Parser Action
 parseAction = withObject "entire webhook" $ \o -> do
     action <- o .: "action" :: Parser String
     case action of
-        "created"   -> pure Created
-        "edited"    -> pure Edited
-        "moved"     -> pure Moved
-        "closed"    -> pure Closed
-        "reopened"  -> pure Reopened
-        "deleted"   -> pure Deleted
-        _           -> fail "Action not supported."
+        "created"  -> pure Created
+        "edited"   -> pure Edited
+        "moved"    -> pure Moved
+        "closed"   -> pure Closed
+        "reopened" -> pure Reopened
+        "deleted"  -> pure Deleted
+        _          -> fail "Action not supported."
 
 -- | Parses a decoded JSON Value to an Item.
 parseItem :: Value -> Parser Item

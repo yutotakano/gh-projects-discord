@@ -7,6 +7,8 @@ module DiscordSender
     ) where
 
 
+import           Control.Monad                  ( unless
+                                                )
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
@@ -14,12 +16,13 @@ import           Network.HTTP.Conduit
 import           Network.HTTP.Types.Status
 
 -- | ADT for the Discord Webhook Execute request body.
-data Params = Params { content  :: T.Text
-                     , username :: T.Text
-                     , avatar_url :: T.Text
-                     , tts      :: Bool
-                     , embeds   :: [Embed]
-                     }
+data Params = Params
+    { content    :: T.Text
+    , username   :: T.Text
+    , avatar_url :: T.Text
+    , tts        :: Bool
+    , embeds     :: [Embed]
+    }
 
 instance ToJSON Params where
     toJSON Params{..} = object
@@ -31,13 +34,14 @@ instance ToJSON Params where
         ]
 
 -- | ADT for the Discord Embed type. Unused fields are not implemented.
-data Embed = Embed { embedTitle :: T.Text
-                   , embedType :: T.Text
-                   , embedDescription :: T.Text
-                   , embedUrl :: T.Text
-                   , embedColor :: Integer
-                   , embedAuthor :: EmbedAuthor
-                   } 
+data Embed = Embed
+    { embedTitle :: T.Text
+    , embedType :: T.Text
+    , embedDescription :: T.Text
+    , embedUrl :: T.Text
+    , embedColor :: Integer
+    , embedAuthor :: EmbedAuthor
+    } 
 
 instance ToJSON Embed where
     toJSON Embed{..} = object
@@ -50,10 +54,11 @@ instance ToJSON Embed where
         ]
 
 -- | ADT for the Discord Embed Author type.
-data EmbedAuthor = EmbedAuthor { embedAuthorName :: T.Text
-                               , embedAuthorUrl :: T.Text
-                               , embedAuthorIcon :: T.Text
-                               }
+data EmbedAuthor = EmbedAuthor
+    { embedAuthorName :: T.Text
+    , embedAuthorUrl :: T.Text
+    , embedAuthorIcon :: T.Text
+    }
 
 instance ToJSON EmbedAuthor where
     toJSON EmbedAuthor{..} = object
@@ -66,23 +71,24 @@ instance ToJSON EmbedAuthor where
 sendRequest :: String -> Params -> IO ()
 sendRequest endpoint params = do
     initRequest <- parseRequest endpoint
-    let request = initRequest { method = "POST"
-                              , requestBody = RequestBodyLBS $ encode params
-                              , requestHeaders = [("Content-Type", "application/json")]
-                              }
+    let request = initRequest
+            { method = "POST"
+            , requestBody = RequestBodyLBS $ encode params
+            , requestHeaders = [("Content-Type", "application/json")]
+            }
     manager <- newManager tlsManagerSettings
     res <- httpLbs request manager
-    case () of
-        _ | responseStatus res == status204 -> pure ()
-        _                                   -> LBS.putStr $ responseBody res
+    unless (responseStatus res == status204) $
+        LBS.putStr $ responseBody res
 
 -- | Wrapper for sendRequest, specifically for sending embeds.
 sendEmbed :: String -> Embed -> IO ()
 sendEmbed endpoint embed = do
-    let params = Params { content = ""
-                        , username = "GitHub"
-                        , avatar_url = "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                        , tts = False
-                        , embeds = [embed]
-                        }
+    let params = Params
+            { content = ""
+            , username = "GitHub"
+            , avatar_url = "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            , tts = False
+            , embeds = [embed]
+            }
     sendRequest endpoint params

@@ -116,7 +116,7 @@ titlePrefix c = "[" <> repoOwnerName c <> "/" <> repoName c <> "] "
 
 -- | Run a parser with a default value if it fails.
 parseMaybeDef :: (a -> Parser b) -> b -> a -> b
-parseMaybeDef parser def v  =
+parseMaybeDef parser def v =
     case parseMaybe parser v of
         Nothing -> def
         Just x  -> x
@@ -149,26 +149,28 @@ getCardNote t v = case parseMaybe parseCardNote v of
 
 -- | Default ADT for Embed.
 def :: Context -> Action -> Embed
-def c a = Embed { embedTitle = ""
-                , embedUrl = ""
-                , embedDescription = ""
-                , embedType = "rich"
-                , embedColor = colorFromAction a
-                , embedAuthor = createAuthor c
-                }
+def c a = Embed
+    { embedTitle = ""
+    , embedUrl = ""
+    , embedDescription = ""
+    , embedType = "rich"
+    , embedColor = colorFromAction a
+    , embedAuthor = createAuthor c
+    }
 
 -- | Transform Actions to decimal color codes.
 colorFromAction :: Action -> Integer
-colorFromAction Created = 6667344 -- #65bc50
-colorFromAction Edited = 16766784 -- #ffd740
-colorFromAction Moved = 16766784 
-colorFromAction Closed = 0
+colorFromAction Created  = 6667344 -- #65bc50
+colorFromAction Edited   = 16766784 -- #ffd740
+colorFromAction Moved    = 16766784 
+colorFromAction Closed   = 0
 colorFromAction Reopened = 11771355 -- #b39ddb
-colorFromAction Deleted = 6588634 -- #6488da
+colorFromAction Deleted  = 6588634 -- #6488da
 
 -- | Transform Context to an EmbedAuthor for Embeds.
 createAuthor :: Context -> EmbedAuthor
-createAuthor context = EmbedAuthor { embedAuthorName = senderName context
-                                   , embedAuthorUrl = "https://github.com/" <> senderName context
-                                   , embedAuthorIcon = senderImage context
-                                   }
+createAuthor context = EmbedAuthor
+    { embedAuthorName = senderName context
+    , embedAuthorUrl = "https://github.com/" <> senderName context
+    , embedAuthorIcon = senderImage context
+    }
